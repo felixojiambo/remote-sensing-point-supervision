@@ -1,3 +1,4 @@
+import sys
 import csv
 import os
 import subprocess
@@ -17,7 +18,7 @@ def ensure_results_header():
 
 def run_one(experiment, domain, img_size, epochs, batch_size, K, strategy):
     cmd = [
-        "python", "-m", "src.train_sparse",
+        sys.executable, "-m", "src.train_sparse",
         "--domain", domain,
         "--img_size", str(img_size),
         "--epochs", str(epochs),
