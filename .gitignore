@@ -5,17 +5,13 @@ __pycache__/
 *.pyd
 *.egg-info/
 *.log
-
 # Virtual env
 venv/
-
 # Data (DO NOT TRACK RAW DATA)
 data/raw/
 data/processed/
-
 # Runs / Checkpoints
 runs/
-
 # OS
 .DS_Store
 Thumbs.db
@@ -25,3 +21,13 @@ data/processed/
 __pycache__/
 *.pt
 *.png
+data/
+runs/
+__pycache__/
+*.pt
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.tar
+*.gz

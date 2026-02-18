@@ -1,0 +1,11 @@
+{
+  "domain": "Urban",
+  "img_size": 256,
+  "batch_size": 4,
+  "epochs": 10,
+  "lr": 1e-4,
+  "K": 200,
+  "strategy": "class_balanced",
+  "seed": 42,
+  "num_workers": 2
+}
