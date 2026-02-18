@@ -1,0 +1,17 @@
+experiment_name: baseline
+
+dataset:
+  name: LoveDA
+  img_size: 512
+  points_per_image: 50
+  sampling_strategy: uniform
+
+training:
+  batch_size: 4
+  epochs: 20
+  learning_rate: 0.0001
+
+model:
+  architecture: deeplabv3plus
+  encoder: resnet34
+  pretrained: true
