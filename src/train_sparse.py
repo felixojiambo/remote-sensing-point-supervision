@@ -1,11 +1,12 @@
 import os
 import json
+import argparse
 from datetime import datetime
 
 import torch
 from torch.utils.data import DataLoader
 
-from src.config import NUM_CLASSES, IGNORE_INDEX, SEED, DEFAULT_POINTS
+from src.config import NUM_CLASSES, IGNORE_INDEX, SEED
 from src.dataset import LoveDADataset
 from src.model import build_model
 from src.point_sampler import sample_points_batch
@@ -45,7 +46,7 @@ def save_sample_viz(run_dir: str, images, mask_full, mask_sparse, pred, epoch: i
     plt.subplot(2, 2, 2)
     plt.title("Sparse points (red)")
     plt.imshow(mf.numpy())
-    overlay = plt.imshow(pts, alpha=0.6)
+    plt.imshow(pts, alpha=0.6)
     plt.axis("off")
 
     plt.subplot(2, 2, 3)
@@ -64,37 +65,52 @@ def save_sample_viz(run_dir: str, images, mask_full, mask_sparse, pred, epoch: i
     plt.close()
 
 
+def parse_args():
+    p = argparse.ArgumentParser(description="Sparse point-supervision training for LoveDA")
+    p.add_argument("--img_size", type=int, default=128)
+    p.add_argument("--batch_size", type=int, default=8)
+    p.add_argument("--epochs", type=int, default=2)
+    p.add_argument("--lr", type=float, default=1e-4)
+    p.add_argument("--K", type=int, default=30)
+    p.add_argument("--strategy", type=str, default="uniform", choices=["uniform", "class_balanced"])
+    p.add_argument("--domain", type=str, default="Urban", choices=["Urban", "Rural"])
+    p.add_argument("--seed", type=int, default=SEED)
+    p.add_argument("--num_workers", type=int, default=2)
+    return p.parse_args()
+
+
 def main():
-    # --- Config (keep simple for now; can move to YAML later) ---
+    args = parse_args()
+
+    # --- Run folder ---
     run_name = f"sparse_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     run_dir = os.path.join("runs", run_name)
     os.makedirs(run_dir, exist_ok=True)
 
+    # --- Config from args ---
     config = {
-    "run_name": run_name,
-    "dataset_root": "data/raw/LoveDA",
-    "train_split": "Train",
-    "val_split": "Val",
-    "domain": "Urban",
-
-    "img_size": 128,      # ✅ was 512
-    "batch_size": 8,      # ✅ was 2 (if RAM allows; else use 4)
-    "epochs": 2,          # ✅ was 5 (dev run)
-    "lr": 1e-4,
-
-    "points_per_image": 30,     # ✅ was DEFAULT_POINTS (optional speed)
-    "sampling_strategy": "uniform",
-    "num_classes": NUM_CLASSES,
-    "ignore_index": IGNORE_INDEX,
-    "seed": SEED,
-    "model": {"arch": "unet", "encoder": "resnet34", "pretrained": "imagenet"},
+        "run_name": run_name,
+        "dataset_root": "data/raw/LoveDA",
+        "train_split": "Train",
+        "val_split": "Val",
+        "domain": args.domain,
+        "img_size": args.img_size,
+        "batch_size": args.batch_size,
+        "epochs": args.epochs,
+        "lr": args.lr,
+        "points_per_image": args.K,
+        "sampling_strategy": args.strategy,
+        "num_classes": NUM_CLASSES,
+        "ignore_index": IGNORE_INDEX,
+        "seed": args.seed,
+        "num_workers": args.num_workers,
+        "model": {"arch": "unet", "encoder": "resnet34", "pretrained": "imagenet"},
     }
-
 
     with open(os.path.join(run_dir, "config.json"), "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
 
-    set_seed(SEED)
+    set_seed(config["seed"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Device:", device)
     print("Run dir:", run_dir)
@@ -113,8 +129,18 @@ def main():
         transforms=build_transforms(img_size=config["img_size"], train=False),
     )
 
-    train_dl = DataLoader(train_ds, batch_size=config["batch_size"], shuffle=True, num_workers=0)
-    val_dl = DataLoader(val_ds, batch_size=config["batch_size"], shuffle=False, num_workers=0)
+    train_dl = DataLoader(
+        train_ds,
+        batch_size=config["batch_size"],
+        shuffle=True,
+        num_workers=config["num_workers"],
+    )
+    val_dl = DataLoader(
+        val_ds,
+        batch_size=config["batch_size"],
+        shuffle=False,
+        num_workers=config["num_workers"],
+    )
 
     # --- Model ---
     model = build_model(num_classes=NUM_CLASSES).to(device)
@@ -191,7 +217,7 @@ def main():
             best_path = os.path.join(run_dir, "best.pt")
             torch.save({"model_state": model.state_dict(), "epoch": epoch, "miou": miou, "config": config}, best_path)
 
-        # Save 1 sample viz from a single val batch for the report
+        # Save 1 sample viz per epoch for the report
         with torch.no_grad():
             images, mask_full = next(iter(val_dl))
             images = images.to(device)
