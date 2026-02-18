@@ -1,0 +1,1 @@
+experiment,domain,img_size,epochs,batch_size,K,strategy,best_miou,best_acc,run_dir
