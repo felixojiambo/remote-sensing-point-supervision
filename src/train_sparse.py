@@ -71,22 +71,25 @@ def main():
     os.makedirs(run_dir, exist_ok=True)
 
     config = {
-        "run_name": run_name,
-        "dataset_root": "data/raw/LoveDA",
-        "train_split": "Train",
-        "val_split": "Val",
-        "domain": "Urban",
-        "img_size": 512,
-        "batch_size": 2,
-        "epochs": 5,
-        "lr": 1e-4,
-        "points_per_image": DEFAULT_POINTS,
-        "sampling_strategy": "uniform",  # change to "class_balanced" for exp
-        "num_classes": NUM_CLASSES,
-        "ignore_index": IGNORE_INDEX,
-        "seed": SEED,
-        "model": {"arch": "unet", "encoder": "resnet34", "pretrained": "imagenet"},
+    "run_name": run_name,
+    "dataset_root": "data/raw/LoveDA",
+    "train_split": "Train",
+    "val_split": "Val",
+    "domain": "Urban",
+
+    "img_size": 128,      # ✅ was 512
+    "batch_size": 8,      # ✅ was 2 (if RAM allows; else use 4)
+    "epochs": 2,          # ✅ was 5 (dev run)
+    "lr": 1e-4,
+
+    "points_per_image": 30,     # ✅ was DEFAULT_POINTS (optional speed)
+    "sampling_strategy": "uniform",
+    "num_classes": NUM_CLASSES,
+    "ignore_index": IGNORE_INDEX,
+    "seed": SEED,
+    "model": {"arch": "unet", "encoder": "resnet34", "pretrained": "imagenet"},
     }
+
 
     with open(os.path.join(run_dir, "config.json"), "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
