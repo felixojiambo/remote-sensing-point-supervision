@@ -19,3 +19,9 @@ runs/
 # OS
 .DS_Store
 Thumbs.db
+runs/
+data/raw/
+data/processed/
+__pycache__/
+*.pt
+*.png
