@@ -47,40 +47,40 @@ class LoveDADataset(Dataset):
         return len(self.image_paths)
 
     def __getitem__(self, idx: int):
-    img_path = self.image_paths[idx]
-    mask_path = self.mask_paths[idx]
+        img_path = self.image_paths[idx]
+        mask_path = self.mask_paths[idx]
 
     # Load image (RGB)
-    image = np.array(Image.open(img_path).convert("RGB"))
+        image = np.array(Image.open(img_path).convert("RGB"))
 
     # Load mask (single channel class indices)
-    mask = np.array(Image.open(mask_path))
+        mask = np.array(Image.open(mask_path))
 
     # Apply transforms
-    if self.transforms is not None:
-        out = self.transforms(image=image, mask=mask)
-        image = out["image"]
-        mask = out["mask"]
-    else:
-        image = torch.from_numpy(image).permute(2, 0, 1).float() / 255.0
-        mask = torch.from_numpy(mask).long()
+        if self.transforms is not None:
+             out = self.transforms(image=image, mask=mask)
+             image = out["image"]
+             mask = out["mask"]
+        else:
+            image = torch.from_numpy(image).permute(2, 0, 1).float() / 255.0
+            mask = torch.from_numpy(mask).long()
 
     # Ensure tensors
-    if not torch.is_tensor(mask):
-        mask = torch.from_numpy(mask).long()
+        if not torch.is_tensor(mask):
+            mask = torch.from_numpy(mask).long()
 
-    image = image.float()
-    mask = mask.long()
+        image = image.float()
+        mask = mask.long()
 
     # --------------------------------------------------
     # 🔥 LoveDA class remapping (CRITICAL STEP)
     # 0 = no-data -> IGNORE_INDEX
     # 1..7 -> 0..6
     # --------------------------------------------------
-    mask = mask.clone()
+        mask = mask.clone()
 
-    mask[mask == 0] = IGNORE_INDEX   # ignore no-data
-    valid = (mask != IGNORE_INDEX)
-    mask[valid] = mask[valid] - 1    # shift 1..7 → 0..6
+        mask[mask == 0] = IGNORE_INDEX   # ignore no-data
+        valid = (mask != IGNORE_INDEX)
+        mask[valid] = mask[valid] - 1    # shift 1..7 → 0..6
 
-    return image, mask
+        return image, mask
