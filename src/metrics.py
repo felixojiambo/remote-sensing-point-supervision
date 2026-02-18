@@ -42,3 +42,12 @@ def pixel_accuracy_from_cm(cm: torch.Tensor) -> float:
     if total.item() == 0:
         return 0.0
     return float((correct / total).item())
+
+def per_class_iou_from_cm(cm: torch.Tensor):
+    cm = cm.float()
+    tp = torch.diag(cm)
+    fp = cm.sum(dim=0) - tp
+    fn = cm.sum(dim=1) - tp
+    denom = tp + fp + fn
+    iou = torch.where(denom > 0, tp / denom, torch.nan)
+    return [float(x) if not torch.isnan(x) else None for x in iou.cpu()]
