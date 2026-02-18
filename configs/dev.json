@@ -1,0 +1,11 @@
+{
+  "domain": "Urban",
+  "img_size": 128,
+  "batch_size": 8,
+  "epochs": 2,
+  "lr": 1e-4,
+  "K": 30,
+  "strategy": "uniform",
+  "seed": 42,
+  "num_workers": 2
+}
